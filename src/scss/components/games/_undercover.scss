@@ -1,11 +1,19 @@
 // Undercover — SCSS de base (s'inspire de _mascarade.scss pour rester cohérent avec Noxi)
+@use "sass:color";
 
 .undercover-board {
   min-height: 100vh;
   padding: 80px 24px 40px;
-  background: linear-gradient(180deg, $darker 0%, darken($darker, 2%) 100%);
+  background: linear-gradient(180deg, $darker 0%, color.adjust($darker, $lightness: -2%) 100%);
   color: #fff;
   font-family: 'Poppins', sans-serif;
+
+  @include tablet {
+    padding: 72px 16px 32px;
+  }
+  @include mobile {
+    padding: 64px 12px 24px;
+  }
 }
 
 .undercover-container {
@@ -137,6 +145,13 @@
   flex-direction: column;
   gap: 8px;
 
+  // Tablette : 2 boutons côte à côte plutôt qu'empilés (gain vertical)
+  @include tablet {
+    flex-direction: row;
+
+    button { flex: 1; }
+  }
+
   button {
     padding: 9px 14px;
     border-radius: 10px;
@@ -198,60 +213,136 @@
 
 .undercover-lobby {
   text-align: center;
-  padding: 40px 20px;
+  padding: 32px 20px;
+  max-width: 600px;
+  margin: 0 auto;
 
-  .lobby-title {
+  @include mobile {
+    padding: 20px 8px;
+  }
+
+  .lobby-logo-wrap {
+    margin-bottom: 20px;
+    animation: logoFadeIn 0.6s ease-out;
+  }
+
+  .lobby-logo {
+    display: inline-block;
+    padding: 10px 28px;
+    background: rgba(149, 253, 252, 0.06);
+    border: 1px solid rgba(149, 253, 252, 0.2);
+    border-radius: 999px;
+    backdrop-filter: blur(12px);
+  }
+
+  .lobby-logo-text {
     font-family: 'Quicksand', sans-serif;
-    font-size: 2rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 6px;
     background: linear-gradient(90deg, $main, $secondary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    margin-bottom: 14px;
+  }
+
+  .lobby-title {
+    font-family: 'Quicksand', sans-serif;
+    font-size: 1.75rem;
+    color: #fff;
+    margin-bottom: 8px;
   }
 
   .lobby-sub {
     font-size: 1.1rem;
-    color: rgba(255,255,255,0.8);
+    color: $main;
+    margin-bottom: 24px;
     animation: pulse 2s ease-in-out infinite;
   }
 
-  .lobby-help {
-    font-size: 0.9rem;
-    color: rgba(255,255,255,0.5);
-    margin-bottom: 28px;
+  .lobby-help-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    text-align: left;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    margin: 0 auto 28px;
+
+    @include mobile {
+      padding: 14px;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .lobby-help-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .lobby-help-text {
+      flex: 1;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.8);
+
+      p { margin: 0 0 8px; }
+      ol {
+        margin: 0 0 10px 20px;
+        padding: 0;
+        li { margin-bottom: 4px; }
+      }
+      em { color: $main; font-style: normal; }
+      strong { color: #fff; }
+      .lobby-help-note {
+        font-size: 0.78rem;
+        color: rgba(255, 255, 255, 0.45);
+        margin-top: 10px;
+      }
+    }
   }
 
   .lobby-host-actions {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    max-width: 320px;
-    margin: 28px auto 0;
+    align-items: center;
+    gap: 10px;
+  }
 
-    .lobby-btn {
-      padding: 12px 20px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 0.95rem;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.04);
-      color: #fff;
-      transition: all 0.2s;
+  .lobby-btn-start {
+    padding: 14px 32px !important;
+    font-size: 1rem;
+    min-width: 240px;
+  }
 
-      &:hover:not(:disabled) {
-        background: rgba(255,255,255,0.1);
-      }
+  .lobby-btn-hint {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    margin: 0;
+  }
 
-      &:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
+  .lobby-wait-container {
+    margin-top: 24px;
+  }
+
+  .lobby-wait-spinner {
+    display: inline-flex;
+    gap: 6px;
+    margin-bottom: 10px;
+
+    .lobby-wait-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: $main;
+      animation: dotBounce 1.4s ease-in-out infinite;
+      &:nth-child(2) { animation-delay: 0.2s; }
+      &:nth-child(3) { animation-delay: 0.4s; }
     }
   }
 
   .lobby-wait {
-    margin-top: 24px;
-    color: rgba(255,255,255,0.5);
+    color: rgba(255, 255, 255, 0.5);
     font-style: italic;
   }
 }
@@ -261,169 +352,572 @@
   50% { opacity: 1; }
 }
 
-// ─── Memorize ───────────────────────────────────────────────────────────────
+@keyframes logoFadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.7); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+// ─── Memorize (écran sous le modal, visible après validation) ───────────────
 
 .undercover-memorize {
   text-align: center;
-  padding: 60px 20px;
+  padding: 40px 20px;
 
   .memorize-title {
     font-family: 'Quicksand', sans-serif;
-    font-size: 1.8rem;
-    margin-bottom: 10px;
-  }
-
-  .memorize-sub {
-    color: rgba(255,255,255,0.7);
-    margin-bottom: 28px;
-  }
-}
-
-.undercover-card-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(6, 18, 47, 0.88);
-  backdrop-filter: blur(8px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.undercover-card-modal {
-  max-width: 400px;
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-
-  @include mobile {
-    max-width: 90vw;
-    gap: 16px;
-  }
-}
-
-.undercover-card {
-  width: 100%;
-  padding: 24px;
-  border-radius: 20px;
-  background: linear-gradient(160deg, rgba(149, 253, 252, 0.12), rgba(254, 190, 253, 0.12));
-  border: 1px solid rgba(149, 253, 252, 0.3);
-  text-align: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-
-  &.is-impostor {
-    background: linear-gradient(160deg, rgba(254, 100, 100, 0.15), rgba(254, 190, 253, 0.12));
-    border-color: rgba(254, 100, 100, 0.4);
-
-    .card-role-banner {
-      background: linear-gradient(90deg, #ff6b6b, $secondary);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-  }
-
-  .card-role-banner {
-    font-family: 'Quicksand', sans-serif;
-    font-weight: 700;
-    font-size: 1.1rem;
-    letter-spacing: 2px;
-    margin-bottom: 16px;
+    font-size: 1.6rem;
+    margin-bottom: 14px;
     background: linear-gradient(90deg, $main, $secondary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
 
-  .card-image {
-    width: 180px;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 14px;
+  .memorize-retry-notice {
+    display: inline-block;
+    margin-bottom: 16px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    background: rgba(254, 190, 253, 0.08);
+    border: 1px solid rgba(254, 190, 253, 0.2);
+    color: $secondary;
   }
 
-  .card-image-fallback {
-    width: 180px;
-    height: 180px;
-    margin: 0 auto 14px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, rgba(149, 253, 252, 0.15), rgba(254, 190, 253, 0.15));
-    border: 2px solid rgba(255,255,255,0.1);
+  .memorize-sub {
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 24px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .memorize-progress {
+    max-width: 400px;
+    margin: 0 auto 20px;
+
+    .memorize-progress-bar {
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 8px;
+
+      .memorize-progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, $main, $secondary);
+        transition: width 0.4s ease;
+      }
+    }
+
+    .memorize-progress-text {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.55);
+    }
+  }
+
+  .memorize-reject-warning {
+    font-size: 0.85rem;
+    color: $secondary;
+    margin-bottom: 20px;
+  }
+
+  .memorize-players-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+    max-width: 500px;
+    margin: 0 auto;
+
+    @include mobile {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .memorize-player-pip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      transition: all 0.3s ease;
+
+      &.validated {
+        background: rgba(149, 253, 252, 0.06);
+        border-color: rgba(149, 253, 252, 0.3);
+        .memorize-player-state { color: $main; }
+      }
+      &.rejected {
+        background: rgba(254, 190, 253, 0.06);
+        border-color: rgba(254, 190, 253, 0.3);
+        .memorize-player-state { color: $secondary; animation: spin 1s linear infinite; }
+      }
+      &.waiting {
+        opacity: 0.6;
+      }
+
+      .memorize-player-name {
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .memorize-player-state {
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.3);
+      }
+    }
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0); }
+  to { transform: rotate(360deg); }
+}
+
+// ─── Card Reveal Modal (flip card) ──────────────────────────────────────────
+
+.undercover-card-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 18, 47, 0.92);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: overlayFadeIn 0.3s ease-out;
+}
+
+.undercover-card-modal {
+  max-width: 420px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+
+  @include mobile {
+    max-width: 92vw;
+    gap: 16px;
+  }
+}
+
+.card-modal-label {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+// Flip card
+.undercover-card-flip {
+  width: 280px;
+  height: 400px;
+  perspective: 1200px;
+
+  @include mobile {
+    width: 240px;
+    height: 340px;
+  }
+
+  .undercover-card-flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.9s cubic-bezier(0.4, 0.0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  &.flipped .undercover-card-flip-inner {
+    transform: rotateY(180deg);
+  }
+
+  .undercover-card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(149, 253, 252, 0.1);
+    overflow: hidden;
+  }
+
+  .undercover-card-back {
+    background:
+      radial-gradient(circle at 30% 30%, rgba(149, 253, 252, 0.15), transparent 50%),
+      radial-gradient(circle at 70% 70%, rgba(254, 190, 253, 0.15), transparent 50%),
+      linear-gradient(135deg, #0a1f4d 0%, #06122F 100%);
+    border: 2px solid rgba(149, 253, 252, 0.2);
     display: flex;
     align-items: center;
     justify-content: center;
 
-    .fallback-initials {
+    .card-back-pattern {
       font-family: 'Quicksand', sans-serif;
-      font-size: 4rem;
-      font-weight: 700;
-      letter-spacing: 2px;
-      background: linear-gradient(90deg, $main, $secondary);
+      font-size: 8rem;
+      font-weight: 300;
+      background: linear-gradient(135deg, rgba(149, 253, 252, 0.4), rgba(254, 190, 253, 0.4));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
   }
 
-  .card-name {
-    font-size: 1.5rem;
-    margin-bottom: 4px;
-  }
+  .undercover-card-front {
+    background: linear-gradient(160deg, #0c1f47, #06122F);
+    border: 2px solid rgba(149, 253, 252, 0.3);
+    transform: rotateY(180deg);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
 
-  .card-anime {
-    color: rgba(255,255,255,0.55);
-    font-style: italic;
-    margin-bottom: 14px;
-  }
+    .card-image {
+      width: 200px;
+      height: 240px;
+      object-fit: cover;
+      border-radius: 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 
-  .card-hint {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.7);
-    padding: 10px;
-    border-radius: 10px;
-    background: rgba(0,0,0,0.2);
+      @include mobile {
+        width: 160px;
+        height: 200px;
+      }
+    }
+
+    .card-image-fallback {
+      width: 200px;
+      height: 240px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(149, 253, 252, 0.15), rgba(254, 190, 253, 0.15));
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      @include mobile {
+        width: 160px;
+        height: 200px;
+      }
+
+      .fallback-initials {
+        font-family: 'Quicksand', sans-serif;
+        font-size: 4.5rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        background: linear-gradient(90deg, $main, $secondary);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    }
+
+    .card-name {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0;
+      text-align: center;
+
+      @include mobile { font-size: 1.1rem; }
+    }
+
+    .card-anime {
+      color: rgba(255, 255, 255, 0.55);
+      font-style: italic;
+      font-size: 0.9rem;
+      margin: 0;
+      text-align: center;
+    }
   }
 }
 
-.card-modal-ok {
-  min-width: 160px;
+.card-hint-neutral {
+  max-width: 380px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.75);
+  text-align: center;
+
+  strong { color: $main; }
+}
+
+.card-modal-buttons {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+  max-width: 420px;
+  justify-content: center;
+
+  @include mobile {
+    flex-direction: column-reverse;
+  }
+}
+
+// Style commun aux 2 boutons du modal (indépendant de .main-btn / .btn pour éviter
+// les conflits visuels — pas de double calque, pas de w-full qui étire mal)
+.card-modal-btn {
+  flex: 1;
+  padding: 13px 20px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  @include mobile {
+    flex: none;
+    width: 100%;
+    font-size: 0.85rem;
+    padding: 12px 18px;
+  }
+}
+
+.card-modal-reject {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
+
+  &:hover {
+    background: rgba(254, 190, 253, 0.08);
+    border-color: rgba(254, 190, 253, 0.3);
+    color: $secondary;
+  }
+}
+
+.card-modal-validate {
+  background: linear-gradient(45deg, $main 0%, $secondary 100%);
+  color: $darker;
+  box-shadow: 0 6px 20px rgba(149, 253, 252, 0.2);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(149, 253, 252, 0.35);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 // ─── Clue Board ─────────────────────────────────────────────────────────────
 
 .undercover-clueboard {
   .clueboard-header {
-    margin-bottom: 24px;
-    padding-bottom: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
 
-    h2 {
-      font-family: 'Quicksand', sans-serif;
-      font-size: 1.5rem;
-      margin-bottom: 6px;
-    }
-
-    .clueboard-turn-mine {
-      color: $main;
-      font-weight: 500;
-    }
-    .clueboard-turn-other {
-      color: rgba(255,255,255,0.7);
+    // Mobile : empiler les 3 éléments (round badge, turn banner, timer) avec
+    // une gap plus courte pour ne pas occuper trop de hauteur
+    @include mobile {
+      gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
     }
   }
 
-  .clueboard-my-card {
-    padding: 12px 16px;
+  .clueboard-round-badge {
+    padding: 6px 12px;
+    border-radius: 999px;
     background: rgba(149, 253, 252, 0.08);
     border: 1px solid rgba(149, 253, 252, 0.2);
+    color: $main;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .clueboard-turn-banner {
+    flex: 1;
+    min-width: 160px;
+    font-family: 'Quicksand', sans-serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+
+    @include mobile {
+      font-size: 1rem;
+      min-width: 0;
+      width: 100%;
+      order: -1; // le banner en 1er en mobile (plus important que round badge/timer)
+      text-align: center;
+    }
+
+    &.mine {
+      color: $main;
+      animation: bannerGlow 1.6s ease-in-out infinite;
+    }
+    &.other {
+      color: rgba(255, 255, 255, 0.7);
+      strong { color: #fff; }
+    }
+
+    .pulse-dot {
+      color: $main;
+      margin-left: 6px;
+      animation: pulse 1.2s ease-in-out infinite;
+    }
+  }
+
+  .clueboard-timer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
     border-radius: 10px;
-    margin-bottom: 20px;
-    font-size: 0.95rem;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    @include mobile {
+      flex: 1;
+      padding: 6px 10px;
+      .timer-bar-track { flex: 1; width: auto; }
+    }
+
+    .timer-value {
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.75);
+      min-width: 32px;
+    }
+
+    .timer-bar-track {
+      width: 80px;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .timer-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, $main, $secondary);
+      transition: width 1s linear;
+    }
+
+    &.low {
+      border-color: rgba(255, 120, 140, 0.5);
+      background: rgba(255, 120, 140, 0.08);
+
+      .timer-value { color: #ff7c8a; }
+      .timer-bar-fill {
+        background: linear-gradient(90deg, #ff7c8a, $secondary);
+        animation: timerPulse 0.5s ease-in-out infinite;
+      }
+    }
+  }
+
+  @keyframes timerPulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  @keyframes bannerGlow {
+    0%, 100% { text-shadow: 0 0 8px rgba(149, 253, 252, 0.2); }
+    50% { text-shadow: 0 0 16px rgba(149, 253, 252, 0.6); }
+  }
+
+  .clueboard-my-card-pane {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(149, 253, 252, 0.08), rgba(254, 190, 253, 0.06));
+    border: 1px solid rgba(149, 253, 252, 0.2);
+    border-radius: 14px;
+    margin-bottom: 22px;
+
+    @include mobile {
+      gap: 12px;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+    }
+  }
+
+  .clueboard-my-card-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, rgba(149, 253, 252, 0.1), rgba(254, 190, 253, 0.1));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .my-card-initials {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, $main, $secondary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+  }
+
+  .clueboard-my-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
 
     .my-card-label {
-      color: rgba(255,255,255,0.6);
-      font-size: 0.85rem;
+      font-size: 0.7rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .my-card-name {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 1.1rem;
+      color: #fff;
+    }
+
+    .my-card-anime {
+      font-style: italic;
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.55);
     }
   }
 
@@ -431,6 +925,47 @@
     display: flex;
     gap: 10px;
     margin-bottom: 28px;
+
+    @include mobile {
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .clueboard-submit-btn {
+      flex-shrink: 0;
+      min-width: 120px;
+      padding: 0 28px;
+      border-radius: 999px;
+      border: none;
+      background: linear-gradient(45deg, $main 0%, $secondary 100%);
+      color: $darker;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+      box-shadow: 0 4px 14px rgba(149, 253, 252, 0.18);
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(149, 253, 252, 0.3);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(0);
+      }
+
+      &:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      @include mobile {
+        width: 100%;
+        padding: 12px 28px;
+      }
+    }
 
     .clueboard-input {
       flex: 1;
@@ -440,6 +975,10 @@
       border-radius: 10px;
       color: #fff;
       font-size: 1rem;
+
+      @include mobile {
+        font-size: 16px; // ≥ 16px évite le zoom auto iOS
+      }
 
       &:focus {
         outline: none;
@@ -461,36 +1000,63 @@
     border: 1px solid rgba(255,255,255,0.06);
 
     .round-title {
-      font-size: 0.85rem;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      color: rgba(255,255,255,0.55);
-      margin-bottom: 10px;
+      letter-spacing: 2px;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 12px;
     }
 
     .round-entries {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
+    }
+
+    .round-empty {
+      font-size: 0.85rem;
+      font-style: italic;
+      color: rgba(255, 255, 255, 0.3);
     }
 
     .round-entry {
       display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 6px 0;
+      align-items: baseline;
+      gap: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      animation: entrySlide 0.3s ease-out;
+
+      @include mobile {
+        flex-direction: column;
+        gap: 2px;
+        padding: 8px 10px;
+      }
 
       .entry-player {
         font-weight: 600;
         min-width: 120px;
+        font-size: 0.9rem;
+
+        @include mobile {
+          min-width: 0;
+          font-size: 0.8rem;
+        }
       }
 
       .entry-clue {
         font-style: italic;
-        color: rgba(255,255,255,0.85);
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 0.95rem;
       }
     }
   }
+}
+
+@keyframes entrySlide {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 // ─── Vote ───────────────────────────────────────────────────────────────────
@@ -500,17 +1066,26 @@
     font-family: 'Quicksand', sans-serif;
     font-size: 1.6rem;
     margin-bottom: 8px;
+
+    @include mobile { font-size: 1.25rem; }
   }
 
   .vote-sub {
     color: rgba(255,255,255,0.7);
     margin-bottom: 24px;
+
+    @include mobile { font-size: 0.9rem; margin-bottom: 16px; }
   }
 
   .vote-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
+
+    @include mobile {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
   }
 
   .vote-target {
@@ -526,6 +1101,21 @@
     cursor: pointer;
     transition: all 0.2s;
 
+    @include mobile {
+      padding: 12px 8px;
+      gap: 6px;
+
+      .vote-avatar {
+        width: 48px !important;
+        height: 48px !important;
+      }
+      .vote-name {
+        font-size: 0.85rem !important;
+        word-break: break-word;
+        text-align: center;
+      }
+    }
+
     &:hover:not(:disabled) {
       background: rgba(255,255,255,0.08);
       transform: translateY(-2px);
@@ -538,6 +1128,17 @@
 
     &.is-me {
       opacity: 0.35;
+    }
+
+    &.is-eliminated {
+      opacity: 0.3;
+      filter: grayscale(1);
+    }
+
+    &.is-pending {
+      border-color: $main;
+      background: rgba(149, 253, 252, 0.08);
+      animation: pulse 1s ease-in-out infinite;
     }
 
     .vote-avatar {
@@ -568,6 +1169,11 @@
     font-size: 2.5rem;
     margin-bottom: 24px;
 
+    @include mobile {
+      font-size: 1.75rem;
+      margin-bottom: 16px;
+    }
+
     &.won {
       background: linear-gradient(90deg, $main, $secondary);
       -webkit-background-clip: text;
@@ -579,6 +1185,7 @@
     &.intermediate {
       color: rgba(255,255,255,0.85);
       font-size: 2rem;
+      @include mobile { font-size: 1.5rem; }
     }
   }
 
@@ -678,6 +1285,17 @@
       border: 1px solid rgba(255,255,255,0.06);
       text-align: left;
 
+      @include mobile {
+        grid-template-columns: 1fr auto;
+        gap: 8px;
+        padding: 10px 12px;
+
+        .reveal-player-char {
+          grid-column: 1 / -1;
+          font-size: 0.8rem;
+        }
+      }
+
       &.impostor {
         background: rgba(255, 124, 138, 0.06);
         border-color: rgba(255, 124, 138, 0.15);
@@ -713,5 +1331,12 @@
     display: flex;
     justify-content: center;
     gap: 12px;
+
+    @include mobile {
+      flex-direction: column;
+      gap: 10px;
+
+      button { width: 100%; }
+    }
   }
 }

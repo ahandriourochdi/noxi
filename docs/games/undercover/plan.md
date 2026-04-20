@@ -87,16 +87,21 @@ export const CHARACTERS = [
 
 ### Base actuelle
 
-**95 personnages** couvrant les animes les plus populaires all-time :
+**150 personnages** couvrant les animes les plus populaires all-time + récents :
 Naruto, One Piece, Dragon Ball Z, Bleach, Death Note, Attack on Titan,
 Jujutsu Kaisen, My Hero Academia, Demon Slayer, Fullmetal Alchemist,
 One Punch Man, Hunter x Hunter, Code Geass, Sword Art Online, Fairy Tail,
 Mob Psycho 100, Chainsaw Man, JoJo, Berserk, Inuyasha, Rurouni Kenshin,
 Dr. Stone, Evangelion, Black Clover, Tokyo Ghoul, D.Gray-man,
-Bungo Stray Dogs, Spy x Family, Tokyo Revengers, Boruto.
+Bungo Stray Dogs, Spy x Family, Tokyo Revengers, Boruto,
+Nanatsu no Taizai, Re:Zero, Fire Force, Haikyuu!!, Vinland Saga, Psycho-Pass,
+Hajime no Ippo, Kuroko's Basketball,
+Blue Lock, Solo Leveling, Frieren, Dandadan, Jigokuraku, Steins;Gate,
+The Promised Neverland, Oshi no Ko.
 
-Avec 95 persos → 4465 paires → 1208 easy / 275 medium / 48 hard / 8 hardcore.
-Hardcore reste sparse : enrichir si on veut plus de variété en difficulté max.
+Avec 150 persos → **11175 paires** → 1754 easy / 134 medium / 29 hard / 6 hardcore
+(éligibles après filtres par catégorie). Hardcore reste sparse (6 paires) mais
+playablePct = 100% à toutes les difficultés.
 
 ---
 
@@ -237,10 +242,10 @@ Chaque niveau combine **deux contraintes** :
 
 | Niveau | Score | min/cat | Paires éligibles | Ressenti |
 |---|:---:|:---:|---:|---|
-| **Facile**    | 0.15 – 0.25 | 0.00 | 1818 | Un truc cloche vite |
-| **Moyen**     | 0.25 – 0.35 | 0.10 | 462  | Hésitation, discussion utile |
-| **Difficile** | 0.35 – 0.45 | 0.15 | 122  | Quasi-jumeaux sur plusieurs axes |
-| **Hardcore**  | 0.45 – 1.00 | 0.22 | 29   | Indiscernables sauf micro-détails |
+| **Facile**    | 0.15 – 0.25 | 0.00 | 1754 | Un truc cloche vite |
+| **Moyen**     | 0.25 – 0.35 | 0.10 | 134  | Hésitation, discussion utile |
+| **Difficile** | 0.35 – 0.45 | 0.15 | 29   | Quasi-jumeaux sur plusieurs axes |
+| **Hardcore**  | 0.45 – 1.00 | 0.22 | 6    | Indiscernables sauf micro-détails |
 
 > **Pourquoi la contrainte `minPerCat`** : sans elle, une paire peut atteindre
 > un score global élevé grâce à UNE seule catégorie dominante (ex : L/Near ont
@@ -249,7 +254,7 @@ Chaque niveau combine **deux contraintes** :
 > plusieurs dimensions — visuel ET personnalité ET pouvoirs ET thèmes.
 
 > **Calibrage empirique** : les fenêtres ont été ajustées après exécution du
-> script de validation. Max observé ~0.66 (Boruto/Naruto), médian ~0.12.
+> script de validation. Max observé ~0.71 (Boruto/Naruto), médian ~0.09.
 
 ---
 
@@ -335,14 +340,19 @@ réel, juste les fonctions pures de distribution.
 - [x] Implémenter le script `validate.js` (1000 tirages/difficulté + exemples)
 - [x] Calibrer les fenêtres de difficulté sur la distribution réelle
 - [x] Script npm `undercover:validate` enregistré dans `package.json`
-- [x] *Enrichir la base* : 65 → 95 personnages
+- [x] *Enrichir la base* : 65 → 95 → 122 → **150 personnages**
+  - Batch janvier 2026 (+27) : Nanatsu no Taizai, Re:Zero, Fire Force, Haikyuu!!,
+    Vinland Saga, Psycho-Pass, Hajime no Ippo, Kuroko's Basketball, FMA homoncules,
+    Naruto villains (Kabuto/Kaguya/Hashirama), MHA (Endeavor/Hawks/Stain)
+  - Batch avril 2026 (+28) : Blue Lock (4), Solo Leveling (2), Frieren (2),
+    Dandadan (2), Jigokuraku (2), Steins;Gate (2), Promised Neverland (3),
+    Oshi no Ko (2), JJK suppléments (3), Demon Slayer suppléments (Muichiro/Akaza/Rengoku),
+    One Piece suppléments (Robin/Sabo/Doflamingo)
 - [x] *Peaufiner les fiches* : propagation systématique des tags cross-cutting
   (`survivant`, `genocide_famille`, `orphelin`, `mentor`, `eleve`, `heritage_pouvoir`,
   `yeux_rouges`, `rejet_enfance`) pour capturer les similarités conceptuelles
   qui manquaient (ex : Sasuke/Kurapika survivants-de-clan-vengeurs)
 - [x] *Affiner minPerCat par difficulté* : 0 / 0.10 / 0.15 / 0.22
-- [ ] *Enrichissement futur optionnel* : ajouter Muichiro/Sanemi (Demon Slayer
-  épéistes), Goku Black, Cell perfect form, pour densifier hardcore vers 15-20 paires
 - [ ] **Point de décision** : passer en Phase 2 (moteur de jeu, WS, UI)
 
 ---

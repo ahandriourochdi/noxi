@@ -13,7 +13,7 @@ import { generatePair, distribute, IMPOSTOR_TABLE } from "./generator.js";
  *   GAME_OVER     : résultats finaux
  */
 export class UndercoverGame {
-  constructor(playersLimit, difficulty = "medium", rounds = 3) {
+  constructor(playersLimit, difficulty = "medium", rounds = 2) {
     const limit = parseInt(playersLimit);
     if (!IMPOSTOR_TABLE[limit]) {
       throw new Error(`Unsupported player count: ${playersLimit}`);
@@ -21,7 +21,7 @@ export class UndercoverGame {
 
     this.playersLimit = limit;
     this.difficulty = difficulty;
-    this.rounds = rounds;                 // nombre de clue-rounds AVANT le 1er vote
+    this.rounds = rounds;                 // nombre de clue-rounds AVANT le 1er vote (default 2)
     this.postVoteRounds = 1;              // nombre de clue-rounds entre 2 votes (cycle)
 
     this.state = {
@@ -36,6 +36,7 @@ export class UndercoverGame {
       currentPlayerIdx: null,
       players: [],
       pair: null,
+      pairRetryCount: 0,        // nombre de re-tirages demandés pendant MEMORIZATION
       clueLog: [],              // [ [ { playerIdx, clue } ] ] aplati, tous rounds confondus
       votes: {},                // clientId -> targetIdx
       eliminationHistory: [],   // [{ playerIdx, role, character, atCycle }] pour afficher au reveal
@@ -61,7 +62,8 @@ export class UndercoverGame {
       seatIdx,
       character: null,
       role: null,
-      hasAcknowledged: false,
+      hasValidated: false,      // le joueur a cliqué "Je connais ce perso"
+      hasRejected: false,       // le joueur a cliqué "Je ne le connais pas" (demande re-tirage)
       alive: true,
       connected: true,
       hasAckReveal: false
@@ -94,8 +96,8 @@ export class UndercoverGame {
       this._advanceClueTurn();
     }
 
-    // Si c'était le seul à ne pas avoir ack/voté, débloquer la phase
-    if (this.state.phase === "MEMORIZATION" && this._allAliveAck()) {
+    // Si c'était le seul à ne pas avoir validé/voté, débloquer la phase
+    if (this.state.phase === "MEMORIZATION" && this._allAliveValidated()) {
       this._startNewRound();
     }
     if (this.state.phase === "VOTE" && this._allAliveVoted()) {
@@ -117,27 +119,15 @@ export class UndercoverGame {
 
   handleAction(clientId, action) {
     switch (action.type) {
-      case "reroll_pair":       return this._handleReroll(clientId);
-      case "start_game":        return this._handleStart(clientId);
-      case "acknowledge_card":  return this._handleAcknowledge(clientId);
-      case "acknowledge_reveal": return this._handleAcknowledge(clientId);
-      case "submit_clue":       return this._handleClue(clientId, action.clue);
-      case "cast_vote":         return this._handleVote(clientId, action.targetIdx);
-      default:                  return { error: "Unknown action" };
+      case "start_game":         return this._handleStart(clientId);
+      case "validate_card":      return this._handleValidateCard(clientId);
+      case "reject_card":        return this._handleRejectCard(clientId);
+      case "acknowledge_card":   return this._handleValidateCard(clientId); // alias legacy
+      case "acknowledge_reveal": return this._handleAckReveal(clientId);
+      case "submit_clue":        return this._handleClue(clientId, action.clue);
+      case "cast_vote":          return this._handleVote(clientId, action.targetIdx);
+      default:                   return { error: "Unknown action" };
     }
-  }
-
-  _handleReroll(clientId) {
-    if (!this.isHost(clientId)) return { error: "Hôte uniquement" };
-    if (this.state.phase !== "WAITING") return { error: "Trop tard pour re-roll" };
-
-    const pair = generatePair({ difficulty: this.difficulty });
-    if (!pair) return { error: "Aucune paire trouvée" };
-
-    this.state.pair = { A: pair.A, B: pair.B, similarity: pair.similarity };
-    this.state.lastAction = { type: "reroll", ts: Date.now() };
-    this._addLog(`L'hôte a re-tiré la paire (${pair.A.name} / ${pair.B.name})`);
-    return {};
   }
 
   _handleStart(clientId) {
@@ -174,46 +164,84 @@ export class UndercoverGame {
   }
 
   _buildDealMessages() {
-    // Chaque joueur reçoit son personnage en message privé
+    // Chaque joueur reçoit uniquement son personnage — PAS son rôle.
+    // Le rôle (imposteur/majorité) ne doit pas être connu avant le REVEAL final.
     return this.state.players.map(p => ({
       clientId: p.clientId,
-      data: { type: "card_reveal", character: p.character, role: p.role }
+      data: { type: "card_reveal", character: p.character }
     }));
   }
 
-  _handleAcknowledge(clientId) {
-    // En MEMORIZATION : valider la lecture de sa carte
-    if (this.state.phase === "MEMORIZATION") {
-      const player = this._getPlayer(clientId);
-      if (!player) return { error: "Joueur non trouvé" };
-      player.hasAcknowledged = true;
-      if (this._allAliveAck()) this._startNewRound();
-      return {};
+  _handleValidateCard(clientId) {
+    if (this.state.phase !== "MEMORIZATION") return { error: "Pas en phase de mémorisation" };
+    const player = this._getPlayer(clientId);
+    if (!player) return { error: "Joueur non trouvé" };
+
+    player.hasValidated = true;
+    player.hasRejected = false;
+
+    // Tous alive+connected ont validé → on démarre les clue rounds
+    if (this._allAliveValidated()) {
+      this._startNewRound();
     }
-    // En REVEAL : valider la lecture du résultat pour enchaîner
-    if (this.state.phase === "REVEAL") {
-      const player = this._getPlayer(clientId);
-      if (!player) return { error: "Joueur non trouvé" };
-      player.hasAckReveal = true;
-      if (this._allAliveAckReveal()) {
-        if (this.state.winner) {
-          this.state.phase = "GAME_OVER";
-          this._addLog(`Partie terminée : ${this.state.winner === "majority" ? "les civils gagnent" : "les imposteurs gagnent"}`);
-        } else {
-          // Reset ack reveal + lancer un nouveau cycle
-          this.state.players.forEach(p => { p.hasAckReveal = false; });
-          this.state.roundsThisCycle = this.postVoteRounds;
-          this.state.currentRound = 0;
-          this._startNewRound();
-        }
-      }
-      return {};
-    }
-    return { error: "Ack pas autorisé dans cette phase" };
+    return {};
   }
 
-  _allAliveAck() {
-    return this.state.players.every(p => !p.alive || !p.connected || p.hasAcknowledged);
+  _handleRejectCard(clientId) {
+    if (this.state.phase !== "MEMORIZATION") return { error: "Pas en phase de mémorisation" };
+    const player = this._getPlayer(clientId);
+    if (!player) return { error: "Joueur non trouvé" };
+
+    // Au moins 1 joueur ne connaît pas la paire → re-tirage complet
+    player.hasRejected = true;
+    player.hasValidated = false;
+
+    // Nouvelle paire, nouvelles cartes distribuées, reset des validations
+    const pair = generatePair({ difficulty: this.difficulty });
+    if (!pair) return { error: "Aucune nouvelle paire trouvée" };
+    this.state.pair = { A: pair.A, B: pair.B, similarity: pair.similarity };
+    this.state.pairRetryCount = (this.state.pairRetryCount || 0) + 1;
+
+    const { A, B } = this.state.pair;
+    const playerCount = this.state.players.length;
+    const deck = distribute({ A, B, playerCount });
+
+    this.state.players.forEach((p, i) => {
+      p.character = deck[i];
+      p.role = deck[i].id === A.id ? "majority" : "impostor";
+      p.hasValidated = false;
+      p.hasRejected = false;
+    });
+
+    this.state.lastAction = { type: "reroll", ts: Date.now() };
+    this._addLog(`${player.clientName} ne connaissait pas un perso. Nouvelle paire tirée (retry #${this.state.pairRetryCount}).`);
+
+    // Retourne les nouveaux messages privés pour que tout le monde reçoive sa nouvelle carte
+    return { privateMessages: this._buildDealMessages() };
+  }
+
+  _handleAckReveal(clientId) {
+    if (this.state.phase !== "REVEAL") return { error: "Pas en phase de reveal" };
+    const player = this._getPlayer(clientId);
+    if (!player) return { error: "Joueur non trouvé" };
+    player.hasAckReveal = true;
+    if (this._allAliveAckReveal()) {
+      if (this.state.winner) {
+        this.state.phase = "GAME_OVER";
+        this._addLog(`Partie terminée : ${this.state.winner === "majority" ? "les civils gagnent" : "les imposteurs gagnent"}`);
+      } else {
+        // Reset ack reveal + lancer un nouveau cycle
+        this.state.players.forEach(p => { p.hasAckReveal = false; });
+        this.state.roundsThisCycle = this.postVoteRounds;
+        this.state.currentRound = 0;
+        this._startNewRound();
+      }
+    }
+    return {};
+  }
+
+  _allAliveValidated() {
+    return this.state.players.every(p => !p.alive || !p.connected || p.hasValidated);
   }
 
   _allAliveAckReveal() {
@@ -396,7 +424,8 @@ export class UndercoverGame {
         seatIdx: p.seatIdx,
         alive: p.alive,
         connected: p.connected,
-        hasAcknowledged: p.hasAcknowledged,
+        hasValidated: p.hasValidated,
+        hasRejected: p.hasRejected,
         hasAckReveal: p.hasAckReveal,
         ...(revealThis
           ? { character: p.character, role: p.role }
@@ -424,6 +453,7 @@ export class UndercoverGame {
       turnOrderIdx: this.state.turnOrderIdx,
       players: publicPlayers,
       pair: publicPair,
+      pairRetryCount: this.state.pairRetryCount,
       clueLog: this.state.clueLog,
       votes: publicVotes,
       voteCount: Object.keys(this.state.votes).length,
@@ -438,15 +468,20 @@ export class UndercoverGame {
   }
 
   /**
-   * État privé propre au joueur : contient SON personnage et SON rôle.
+   * État privé propre au joueur : contient SON personnage (toujours),
+   * mais SON rôle n'est révélé qu'au REVEAL final (pour que le joueur ne sache
+   * pas s'il est imposteur pendant la partie — core gameplay Undercover).
    */
   getPrivateState(clientId) {
     const player = this._getPlayer(clientId);
     if (!player) return null;
+    const revealPhase = this.state.phase === "REVEAL" || this.state.phase === "GAME_OVER";
     return {
       playerIdx: player.seatIdx,
       character: player.character,
-      role: player.role,
+      role: revealPhase ? player.role : null,
+      hasValidated: player.hasValidated,
+      hasRejected: player.hasRejected,
       hasVoted: this.state.votes[clientId] !== undefined,
       myVote: this.state.votes[clientId] ?? null
     };

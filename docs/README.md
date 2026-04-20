@@ -26,6 +26,10 @@ Bienvenue dans la documentation du projet **Noxi** -- Plateforme de Gaming Multi
 - [Mascarade](games/mascarade/README.md) -- Jeu de bluff multijoueur (4-8 joueurs)
   - [Regles du jeu](games/mascarade/regles.md) -- Regles completes de Mascarade
   - [Implementation technique](games/mascarade/implementation.md) -- Moteur de jeu, WebSocket, animations
+- **Undercover** -- Jeu de deduction anime/manga (3-10 joueurs)
+  - [Plan de design](games/undercover/plan.md) -- Architecture, algorithme de generation, moteur de similarite
+  - [Pipeline d'images](games/undercover/images-pipeline.md) -- API Jikan, script auto-download, overrides
+  - [Liste des persos + liens images](games/undercover/characters-images.md) -- Checklist pour remplacements manuels
 
 ### Installation et serveur
 - [Guide d'installation](setup/installation.md) -- Prerequis, configuration, lancement

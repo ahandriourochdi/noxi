@@ -88,6 +88,21 @@ Ouvrir `http://localhost:3006`
 
 > Voir [docs/setup/installation.md](docs/setup/installation.md) pour le guide complet.
 
+### Comptes de test (BDD locale)
+
+Le dump `docs/db/noxi_database.sql` inclut 3 comptes pre-verifies pour tester rapidement :
+
+| Role | Username | Email | Mot de passe |
+|---|---|---|---|
+| **Admin** | `admin` | admin@noxi.local | `Admin123!` |
+| User | `NoxiPlayer1` | player1@noxi.local | `Player1!` |
+| User | `NoxiPlayer2` | player2@noxi.local | `Player2!` |
+
+> Si la BDD est vide (Sequelize `db.sync()` ne cree que les tables), importe le dump via phpMyAdmin : onglet "Importer" -> `docs/db/noxi_database.sql`. Alternativement, tu peux t'inscrire normalement puis faire passer le role a admin :
+> ```sql
+> UPDATE ncs_users SET role='admin', status='verified' WHERE mail='ton@email.com';
+> ```
+
 ---
 
 ## Documentation

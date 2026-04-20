@@ -31,7 +31,8 @@ export default function Undercover() {
   const [privateState, setPrivateState] = useState(null);
   const [gameClients, setGameClients] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
-  const [cardRevealData, setCardRevealData] = useState(null); // { character, role } du DEAL
+  const [cardRevealData, setCardRevealData] = useState(null); // { character } du DEAL (rôle caché)
+  const [showCardModal, setShowCardModal] = useState(false); // pour ouvrir/fermer le modal
   const [clueDraft, setClueDraft] = useState("");
   const [copied, setCopied] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -211,7 +212,9 @@ export default function Undercover() {
 
   const handlePrivateMessage = (data) => {
     if (data.type === "card_reveal") {
-      setCardRevealData({ character: data.character, role: data.role });
+      // Le rôle n'est plus envoyé — le joueur ignore s'il est imposteur ou majorité.
+      setCardRevealData({ character: data.character });
+      setShowCardModal(true);
     }
   };
 
@@ -424,13 +427,16 @@ export default function Undercover() {
       </div>
 
       {/* Card reveal modal — apparaît au début de MEMORIZATION */}
-      {cardRevealData && phase === "MEMORIZATION" && createPortal(
+      {showCardModal && cardRevealData && phase === "MEMORIZATION" && createPortal(
         <CardRevealModal
           character={cardRevealData.character}
-          role={cardRevealData.role}
-          onClose={() => {
-            sendAction({ type: "acknowledge_card" });
-            setCardRevealData(null);
+          onValidate={() => {
+            sendAction({ type: "validate_card" });
+            setShowCardModal(false);
+          }}
+          onReject={() => {
+            sendAction({ type: "reject_card" });
+            // Le modal se fermera automatiquement quand le nouveau private_message arrive
           }}
         />,
         document.body
@@ -493,49 +499,106 @@ function phaseLabel(phase, state) {
 function Lobby({ gameState, gameClients, isHost, allCanStart, playersReady, playersNeeded, sendAction }) {
   return (
     <div className="undercover-lobby">
-      <h2 className="lobby-title">Salle d'attente</h2>
-      <p className="lobby-sub">En attente de joueurs... ({playersReady}/{playersNeeded})</p>
-      <p className="lobby-help">Partagez le lien pour inviter. Minimum 3 joueurs pour démarrer.</p>
+      <div className="lobby-logo-wrap">
+        <div className="lobby-logo">
+          <span className="lobby-logo-text">UNDERCOVER</span>
+        </div>
+      </div>
 
-      {isHost && (
+      <h2 className="lobby-title">Salle d'attente</h2>
+      <p className="lobby-sub">
+        {playersReady}/{playersNeeded} joueur{playersReady > 1 ? "s" : ""} prêt{playersReady > 1 ? "s" : ""}
+      </p>
+
+      <div className="lobby-help-card">
+        <div className="lobby-help-icon">💡</div>
+        <div className="lobby-help-text">
+          <p><strong>Comment ça marche :</strong></p>
+          <ol>
+            <li>Chaque joueur reçoit un personnage d'anime</li>
+            <li>Tu connais ton perso mais pas ton <em>rôle</em> (civil ou imposteur)</li>
+            <li>À tour de rôle, donne un indice qui décrit ton perso</li>
+            <li>Vote pour celui qui te semble différent</li>
+          </ol>
+          <p className="lobby-help-note">Minimum 3 joueurs. Tous les joueurs valideront leur carte avant le début.</p>
+        </div>
+      </div>
+
+      {isHost ? (
         <div className="lobby-host-actions">
-          <button type="button" className="lobby-btn lobby-btn-reroll"
-            onClick={() => sendAction({ type: "reroll_pair" })}>
-            Re-tirer la paire de personnages
-          </button>
-          <button type="button" className="lobby-btn lobby-btn-start main-btn"
+          <button type="button" className="lobby-btn-start main-btn"
             disabled={!allCanStart}
             onClick={() => sendAction({ type: "start_game" })}>
             Démarrer la partie
           </button>
+          {!allCanStart && <p className="lobby-btn-hint">Il faut au moins 3 joueurs</p>}
+        </div>
+      ) : (
+        <div className="lobby-wait-container">
+          <div className="lobby-wait-spinner">
+            <div className="lobby-wait-dot"></div>
+            <div className="lobby-wait-dot"></div>
+            <div className="lobby-wait-dot"></div>
+          </div>
+          <p className="lobby-wait">En attente de l'hôte...</p>
         </div>
       )}
-
-      {!isHost && <p className="lobby-wait">En attente de l'hôte...</p>}
     </div>
   );
 }
 
 function Memorize({ privateState, gameState, gameClients, myPlayerIdx, clientIdRef, sendAction }) {
-  const readyCount = gameState?.players?.filter(p => p.hasAcknowledged).length || 0;
-  const total = gameState?.players?.length || 0;
+  const validatedCount = gameState?.players?.filter(p => p.alive && p.connected && p.hasValidated).length || 0;
+  const total = gameState?.players?.filter(p => p.alive && p.connected).length || 0;
+  const rejectedCount = gameState?.players?.filter(p => p.alive && p.connected && p.hasRejected).length || 0;
   const me = gameState?.players?.find(p => p.clientId === clientIdRef.current);
-  const iAcknowledged = me?.hasAcknowledged;
+  const iValidated = me?.hasValidated;
+  const retries = gameState?.pairRetryCount || 0;
 
+  // Affichage simple sous le modal (quand le modal est fermé — après validation)
   return (
     <div className="undercover-memorize">
-      <h2 className="memorize-title">Mémorisez votre personnage</h2>
-      {iAcknowledged ? (
-        <p className="memorize-sub">En attente des autres joueurs... ({readyCount}/{total})</p>
+      <h2 className="memorize-title">Mémorisation des personnages</h2>
+
+      {retries > 0 && (
+        <div className="memorize-retry-notice">
+          Re-tirage #{retries} — un joueur ne connaissait pas un perso.
+        </div>
+      )}
+
+      {iValidated ? (
+        <>
+          <p className="memorize-sub">En attente des autres joueurs...</p>
+          <div className="memorize-progress">
+            <div className="memorize-progress-bar">
+              <div className="memorize-progress-fill" style={{ width: `${(validatedCount / total) * 100}%` }}></div>
+            </div>
+            <div className="memorize-progress-text">{validatedCount}/{total} validé{validatedCount > 1 ? "s" : ""}</div>
+          </div>
+          {rejectedCount > 0 && (
+            <p className="memorize-reject-warning">
+              ⚠ {rejectedCount} joueur{rejectedCount > 1 ? "s" : ""} a demandé un re-tirage — nouvelle paire en cours...
+            </p>
+          )}
+        </>
       ) : (
-        <p className="memorize-sub">Cliquez sur votre carte pour voir qui vous êtes, puis validez.</p>
+        <p className="memorize-sub">Regardez votre carte dans la fenêtre.</p>
       )}
-      {privateState?.character && !iAcknowledged && (
-        <button type="button" className="main-btn memorize-reveal-btn"
-          onClick={() => sendAction({ type: "acknowledge_card" })}>
-          J'ai mémorisé
-        </button>
-      )}
+
+      <div className="memorize-players-grid">
+        {gameState?.players?.map((p, i) => {
+          const client = gameClients?.find(c => c.clientId === p.clientId);
+          return (
+            <div key={p.clientId} className={`memorize-player-pip ${p.hasValidated ? "validated" : p.hasRejected ? "rejected" : "waiting"}`}
+              style={{ borderColor: client?.color }}>
+              <span className="memorize-player-name" style={{ color: client?.color }}>{p.clientName}</span>
+              <span className="memorize-player-state">
+                {p.hasValidated ? "✓" : p.hasRejected ? "↻" : "…"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -544,29 +607,82 @@ function ClueBoard({ gameState, privateState, gameClients, myPlayerIdx, isMyTurn
   const currentPlayer = gameState.players[gameState.currentPlayerIdx];
   const myCharacter = privateState?.character;
 
+  // Timer de 30 secondes par indice : reset à chaque changement de joueur
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [imgOk, setImgOk] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const submittedThisTurnRef = useRef(false);
+
+  useEffect(() => {
+    setTimeLeft(30);
+    setImgOk(true);
+    setSubmitting(false);
+    submittedThisTurnRef.current = false;
+  }, [gameState.currentPlayerIdx, gameState.currentRound]);
+
+  useEffect(() => {
+    if (timeLeft <= 0) return;
+    const t = setTimeout(() => setTimeLeft(s => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [timeLeft]);
+
+  // Auto-skip à 0s : si c'est mon tour et que le timer tombe à 0, on envoie
+  // automatiquement "..." pour débloquer le jeu. Garde-fou `submittedThisTurnRef`
+  // pour éviter le double-envoi (React strict mode + autre render).
+  useEffect(() => {
+    if (timeLeft === 0 && isMyTurn && !submittedThisTurnRef.current) {
+      submittedThisTurnRef.current = true;
+      setSubmitting(true);
+      sendAction({ type: "submit_clue", clue: "..." });
+      setClueDraft("");
+    }
+  }, [timeLeft, isMyTurn, sendAction, setClueDraft]);
+
   const submit = () => {
     const trimmed = clueDraft.trim();
-    if (!trimmed) return;
+    if (!trimmed || submitting || submittedThisTurnRef.current) return;
+    submittedThisTurnRef.current = true;
+    setSubmitting(true);
     sendAction({ type: "submit_clue", clue: trimmed });
     setClueDraft("");
   };
 
+  const initials = (myCharacter?.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const timeLow = timeLeft <= 10;
+
   return (
     <div className="undercover-clueboard">
       <div className="clueboard-header">
-        <h2>Round {gameState.currentRound} / {gameState.roundsThisCycle || gameState.rounds}</h2>
-        {isMyTurn ? (
-          <p className="clueboard-turn-mine">C'est votre tour — donnez un indice (1 mot / expression courte) sur votre personnage.</p>
-        ) : (
-          <p className="clueboard-turn-other">Tour de <strong>{currentPlayer?.clientName}</strong></p>
-        )}
+        <div className="clueboard-round-badge">
+          Round {gameState.currentRound} / {gameState.roundsThisCycle || gameState.rounds}
+        </div>
+        <div className={`clueboard-turn-banner ${isMyTurn ? "mine" : "other"}`}>
+          {isMyTurn
+            ? <>Votre tour <span className="pulse-dot">●</span></>
+            : <>Tour de <strong>{currentPlayer?.clientName}</strong></>}
+        </div>
+        <div className={`clueboard-timer ${timeLow ? "low" : ""}`}>
+          <span className="timer-value">{Math.max(0, timeLeft)}s</span>
+          <div className="timer-bar-track">
+            <div className="timer-bar-fill" style={{ width: `${(Math.max(0, timeLeft) / 30) * 100}%` }}></div>
+          </div>
+        </div>
       </div>
 
       {myCharacter && (
-        <div className="clueboard-my-card">
-          <span className="my-card-label">Votre personnage :</span>
-          <strong style={{ marginLeft: 8 }}>{myCharacter.name}</strong>
-          {myCharacter.anime && <em style={{ marginLeft: 8, opacity: 0.7 }}>({myCharacter.anime})</em>}
+        <div className="clueboard-my-card-pane">
+          <div className="clueboard-my-card-thumb">
+            {myCharacter.image && imgOk ? (
+              <img src={myCharacter.image} alt={myCharacter.name} onError={() => setImgOk(false)} />
+            ) : (
+              <span className="my-card-initials">{initials}</span>
+            )}
+          </div>
+          <div className="clueboard-my-card-info">
+            <span className="my-card-label">Votre personnage</span>
+            <strong className="my-card-name">{myCharacter.name}</strong>
+            {myCharacter.anime && <em className="my-card-anime">{myCharacter.anime}</em>}
+          </div>
         </div>
       )}
 
@@ -577,13 +693,14 @@ function ClueBoard({ gameState, privateState, gameClients, myPlayerIdx, isMyTurn
             className="clueboard-input"
             value={clueDraft}
             onChange={(e) => setClueDraft(e.target.value)}
-            placeholder="Votre indice..."
+            placeholder="Un mot ou une courte expression qui décrit votre perso..."
             maxLength={40}
             autoFocus
+            disabled={submitting}
             onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
           />
-          <button type="button" className="main-btn" onClick={submit} disabled={!clueDraft.trim()}>
-            Envoyer
+          <button type="button" className="clueboard-submit-btn" onClick={submit} disabled={!clueDraft.trim() || submitting}>
+            {submitting ? "Envoi..." : "Envoyer"}
           </button>
         </div>
       )}
@@ -593,6 +710,7 @@ function ClueBoard({ gameState, privateState, gameClients, myPlayerIdx, isMyTurn
           <div key={rIdx} className="clueboard-round">
             <h3 className="round-title">Round {rIdx + 1}</h3>
             <div className="round-entries">
+              {roundEntries.length === 0 && <span className="round-empty">En cours...</span>}
               {roundEntries.map((entry, i) => {
                 const player = gameClients.find(c => c.clientId === gameState.players[entry.playerIdx]?.clientId);
                 return (
@@ -613,7 +731,14 @@ function ClueBoard({ gameState, privateState, gameClients, myPlayerIdx, isMyTurn
 function VotePanel({ gameState, privateState, gameClients, myPlayerIdx, clientIdRef, sendAction }) {
   const hasVoted = privateState?.hasVoted;
   const voteCount = gameState.voteCount || 0;
-  const total = gameState.players?.length || 0;
+  const total = gameState.aliveVoters || gameState.players?.length || 0;
+  const [pendingTarget, setPendingTarget] = useState(null);
+
+  const handleVote = (idx) => {
+    if (hasVoted || pendingTarget !== null) return;
+    setPendingTarget(idx);
+    sendAction({ type: "cast_vote", targetIdx: idx });
+  };
 
   return (
     <div className="undercover-vote">
@@ -628,18 +753,23 @@ function VotePanel({ gameState, privateState, gameClients, myPlayerIdx, clientId
         {gameState.players.map((p, i) => {
           const client = gameClients.find(c => c.clientId === p.clientId);
           const isMe = p.clientId === clientIdRef.current;
+          const isEliminated = !p.alive;
+          const isPending = pendingTarget === i;
+          const disabled = hasVoted || isMe || isEliminated || pendingTarget !== null;
           return (
             <button
               key={p.clientId}
               type="button"
-              className={`vote-target ${hasVoted ? "disabled" : ""} ${isMe ? "is-me" : ""}`}
-              disabled={hasVoted || isMe}
-              onClick={() => sendAction({ type: "cast_vote", targetIdx: i })}
+              className={`vote-target ${disabled ? "disabled" : ""} ${isMe ? "is-me" : ""} ${isEliminated ? "is-eliminated" : ""} ${isPending ? "is-pending" : ""}`}
+              disabled={disabled}
+              onClick={() => handleVote(i)}
               style={{ borderColor: client?.color }}
             >
               <img className="vote-avatar" src={`https://robohash.org/${encodeURIComponent(p.clientName || "Joueur")}`} alt="" />
               <span className="vote-name" style={{ color: client?.color }}>{p.clientName}</span>
               {isMe && <span className="vote-me-tag">(vous)</span>}
+              {isEliminated && <span className="vote-me-tag">éliminé</span>}
+              {isPending && <span className="vote-me-tag">enregistrement...</span>}
             </button>
           );
         })}
@@ -758,36 +888,63 @@ function Reveal({ gameState, gameClients, myPlayerIdx, privateState, clientIdRef
   );
 }
 
-function CardRevealModal({ character, role, onClose }) {
+function CardRevealModal({ character, onValidate, onReject }) {
   const [imgOk, setImgOk] = useState(true);
+  const [flipped, setFlipped] = useState(false);
   const initials = (character?.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
 
+  // Animation d'entrée : la carte se retourne face visible après 200ms
+  useEffect(() => {
+    setFlipped(false);
+    setImgOk(true);
+    const t = setTimeout(() => setFlipped(true), 200);
+    return () => clearTimeout(t);
+  }, [character?.id]);
+
   return (
-    <div className="undercover-card-modal-overlay" onClick={onClose}>
-      <div className="undercover-card-modal" onClick={(e) => e.stopPropagation()}>
-        <div className={`undercover-card ${role === "impostor" ? "is-impostor" : "is-majority"}`}>
-          <div className="card-role-banner">
-            {role === "impostor" ? "Vous êtes IMPOSTEUR" : "Vous êtes MAJORITÉ"}
-          </div>
-          {character?.image && imgOk ? (
-            <img className="card-image" src={character.image} alt={character.name}
-              onError={() => setImgOk(false)} />
-          ) : (
-            <div className="card-image-fallback">
-              <span className="fallback-initials">{initials}</span>
+    <div className="undercover-card-modal-overlay">
+      <div className="undercover-card-modal">
+
+        <p className="card-modal-label">Votre personnage</p>
+
+        <div className={`undercover-card-flip ${flipped ? "flipped" : ""}`}>
+          <div className="undercover-card-flip-inner">
+            <div className="undercover-card-face undercover-card-back">
+              <div className="card-back-pattern">?</div>
             </div>
-          )}
-          <h3 className="card-name">{character?.name}</h3>
-          {character?.anime && <p className="card-anime">{character.anime}</p>}
-          <div className="card-hint">
-            {role === "impostor"
-              ? "Un ou plusieurs autres joueurs ont le même rôle. Les autres ont un personnage DIFFÉRENT mais similaire."
-              : "La plupart des joueurs ont le même personnage que vous. Un ou plusieurs ont un personnage DIFFÉRENT à démasquer."}
+            <div className="undercover-card-face undercover-card-front">
+              {character?.image && imgOk ? (
+                <img className="card-image" src={character.image} alt={character.name}
+                  onError={() => setImgOk(false)} />
+              ) : (
+                <div className="card-image-fallback">
+                  <span className="fallback-initials">{initials}</span>
+                </div>
+              )}
+              <h3 className="card-name">{character?.name}</h3>
+              {character?.anime && <p className="card-anime">{character.anime}</p>}
+            </div>
           </div>
         </div>
-        <button type="button" className="main-btn card-modal-ok" onClick={onClose}>
-          J'ai mémorisé !
-        </button>
+
+        <div className="card-hint-neutral">
+          Mémorisez-le bien. D'autres joueurs ont le <strong>même personnage</strong> que vous,
+          mais <strong>un ou plusieurs</strong> ont un personnage <strong>similaire mais différent</strong>.
+          <br/>
+          À vous de deviner qui, grâce aux indices.
+        </div>
+
+        <div className="card-modal-buttons">
+          <button type="button" className="card-modal-btn card-modal-reject"
+            onClick={onReject}
+            title="Re-tirer la paire (change aussi les persos des autres joueurs)">
+            Je ne le connais pas
+          </button>
+          <button type="button" className="card-modal-btn card-modal-validate"
+            onClick={onValidate}>
+            Je connais ce personnage
+          </button>
+        </div>
       </div>
     </div>
   );

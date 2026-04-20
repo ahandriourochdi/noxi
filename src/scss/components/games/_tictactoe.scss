@@ -16,6 +16,13 @@
         transition: background 0.2s ease;
         cursor: default;
 
+        // Mobile : cases plus petites pour tenir sur petits écrans
+        @include mobile {
+            height: 80px;
+            width: 80px;
+            font-size: 1.75rem;
+        }
+
         &.clickable{
             cursor: pointer;
 
@@ -74,11 +81,45 @@
     #oxoBoard{
         @apply relative bg-white bg-opacity-[0.07] mb-12 mt-12 rounded-3xl p-8 min-h-[600px] h-[600px] flex flex-row;
 
+        // Tablette/mobile : empiler sidebar + plateau
+        @include tablet {
+            flex-direction: column;
+            height: auto;
+            min-height: 0;
+            padding: 20px;
+            gap: 20px;
+        }
+        @include mobile {
+            padding: 16px;
+            border-radius: 20px;
+        }
+
         .boardinfo{
             @apply flex flex-col justify-between border-r-2 border-white border-opacity-[0.07] pr-10;
 
+            // Tablette : sidebar devient bandeau horizontal en haut
+            @include tablet {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                border-right: none;
+                border-bottom: 2px solid rgba(255, 255, 255, 0.07);
+                padding-right: 0;
+                padding-bottom: 16px;
+                gap: 16px;
+            }
+            @include mobile {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 16px;
+            }
+
             .players{
                 @apply w-[220px];
+
+                @include mobile {
+                    width: 100%;
+                }
 
                 h4{
                     @apply text-center w-full mb-4 text-xl;
@@ -158,6 +199,10 @@
 .oxo-player{
     @apply w-[220px] flex items-center justify-between px-5 py-2.5 rounded-full mb-0;
     transition: background 0.3s ease;
+
+    @include mobile {
+        width: 100%;
+    }
 
     &--primary{
         background: #061A4A;

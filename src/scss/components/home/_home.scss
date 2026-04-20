@@ -4,6 +4,12 @@
         margin-top: -88px;
         padding-top: 88px;
 
+        // Mobile : parallax conservé mais compressé
+        @include mobile {
+            height: 85vh;
+            min-height: 500px;
+        }
+
         .parallax-fond{
             @apply absolute inset-0;
             width: 100%;
@@ -22,12 +28,33 @@
             @apply absolute bottom-0 left-0 w-full;
             z-index: 2;
             will-change: transform;
+
+            // Mobile : réduire l'amplitude du parallax (perf + lisibilité)
+            @include mobile {
+                will-change: auto;
+            }
         }
 
         .home-title{
             @apply absolute inset-0 flex flex-col justify-center pb-24;
             z-index: 3;
             will-change: transform;
+
+            @include mobile {
+                padding: 0 20px 60px;
+                padding-top: 88px;
+
+                h1 {
+                    font-size: 2.5rem;
+                    margin-bottom: 20px;
+                    text-align: center;
+                }
+                h3 {
+                    font-size: 1.1rem;
+                    margin-bottom: 16px;
+                    text-align: center;
+                }
+            }
 
             h1{
                 @apply mb-12;
@@ -42,6 +69,10 @@
             @apply absolute bottom-0 left-0 w-full pointer-events-none;
             z-index: 4;
             will-change: transform;
+
+            @include mobile {
+                will-change: auto;
+            }
         }
 
         .home-gradient-transition{
@@ -68,8 +99,25 @@
         .home-content-child{
             @apply flex flex-col gap-24 pt-16;
 
+            @include tablet {
+                gap: 48px;
+                padding-top: 32px;
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
             .home-paragraph{
                 @apply flex justify-around items-center gap-16 relative z-20;
+
+                // Mobile/tablette : empiler verticalement — texte puis image
+                @include tablet {
+                    flex-direction: column;
+                    gap: 24px;
+
+                    &:nth-child(2n) {
+                        flex-direction: column;
+                    }
+                }
 
                 &:nth-child(2n) {
                     @apply flex-row-reverse;
@@ -79,8 +127,13 @@
                     .paragraph-text{
                         .title-border{
                             @apply w-[330px];
+
+                            @include mobile {
+                                width: 100%;
+                                max-width: 280px;
+                            }
                         }
-                    }   
+                    }
 
                     .paragraph-image{
                         img{
@@ -94,9 +147,14 @@
                     .paragraph-text{
                         .title-border{
                             @apply w-[453px];
+
+                            @include mobile {
+                                width: 100%;
+                                max-width: 320px;
+                            }
                         }
-                    }  
-                    
+                    }
+
                     .paragraph-image{
                         img{
                             @apply left-[20%] top-[-7.7%] ;
@@ -107,11 +165,20 @@
                 &:last-child{
                     @apply mb-32;
 
+                    @include tablet {
+                        margin-bottom: 48px;
+                    }
+
                     .paragraph-text{
                         .title-border{
                             @apply w-[535px];
+
+                            @include mobile {
+                                width: 100%;
+                                max-width: 360px;
+                            }
                         }
-                    }  
+                    }
 
                     .paragraph-image{
                         img{
@@ -123,8 +190,17 @@
                 .paragraph-text{
                     @apply w-1/2;
 
+                    @include tablet {
+                        width: 100%;
+                        text-align: center;
+                    }
+
                     .subtitle{
                         @apply flex flex-row items-center mb-5;
+
+                        @include tablet {
+                            justify-content: center;
+                        }
 
                         svg{
                             @apply mr-4;
@@ -133,37 +209,73 @@
 
                     h2{
                         @apply text-white mb-5;
+
+                        @include mobile {
+                            font-size: 1.75rem;
+                            line-height: 1.2;
+                        }
                     }
 
                     p{
                         @apply mb-8;
+
+                        @include mobile {
+                            font-size: 0.95rem;
+                            margin-bottom: 20px;
+                        }
                     }
                 }
 
                 .paragraph-image{
                     @apply w-1/2 relative pt-6 mx-auto;
 
+                    @include tablet {
+                        width: 100%;
+                        max-width: 400px;
+                    }
+
                     .gradient-circle{
                         @apply w-auto max-w-[400px] h-auto;
+
+                        @include mobile {
+                            max-width: 280px;
+                        }
                     }
 
                     img{
                         @apply absolute max-w-md;
+
+                        @include mobile {
+                            max-width: 280px;
+                        }
                     }
                 }
             }
-            
+
         }
 
         .game-quote{
             @apply flex flex-col justify-center items-center py-24 font-title;
 
+            @include mobile {
+                padding: 48px 20px;
+            }
+
             h3{
                 @apply font-medium text-5xl text-center leading-tight mb-8;
+
+                @include mobile {
+                    font-size: 1.75rem;
+                    margin-bottom: 20px;
+                }
             }
 
             span{
                 @apply text-secondary text-xl ;
+
+                @include mobile {
+                    font-size: 1rem;
+                }
             }
         }
     }

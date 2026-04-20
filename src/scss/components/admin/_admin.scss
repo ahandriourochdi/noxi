@@ -34,8 +34,20 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
 
+  @include mobile {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
   .admin-table-header {
     @apply flex items-center justify-between mb-5;
+
+    // Mobile : empiler titre, recherche, bouton ajouter
+    @include mobile {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
 
     h3 {
       @apply text-lg font-title font-semibold text-white;
@@ -43,6 +55,10 @@
 
     .admin-table-header-actions {
       @apply flex items-center gap-3;
+
+      @include mobile {
+        flex-wrap: wrap;
+      }
     }
   }
 
@@ -52,6 +68,11 @@
     border: 1px solid rgba(255, 255, 255, 0.1);
     outline: none;
     min-width: 200px;
+
+    @include mobile {
+      min-width: 0;
+      flex: 1;
+    }
     transition: all 0.3s;
 
     &::placeholder {
@@ -300,6 +321,12 @@
 .admin-field-row {
   @apply flex gap-4;
   .admin-field { @apply flex-1; }
+
+  // Mobile : empiler les champs côte à côte
+  @include mobile {
+    flex-direction: column;
+    gap: 0;
+  }
 }
 
 .admin-image-upload {

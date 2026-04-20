@@ -16,8 +16,19 @@
     .support-container{
         @apply flex flex-row mb-16;
 
+        // Tablette/mobile : empiler questions + image (image cachée mobile pour gagner de la place)
+        @include tablet {
+            flex-direction: column;
+            gap: 24px;
+        }
+
         .questions-container{
             @apply shadow-sm w-6/12 rounded pr-8;
+
+            @include tablet {
+                width: 100%;
+                padding-right: 0;
+            }
 
             h3{
                 @apply mb-10 font-semibold text-2xl;
@@ -95,6 +106,11 @@
 
         .support-img{
             @apply relative w-[450px] mx-auto;
+
+            // Mobile : image cachée (décorative, pas essentielle)
+            @include mobile {
+                display: none;
+            }
 
             svg{
                 @apply absolute left-0 top-14 max-w-md h-auto w-[390px];

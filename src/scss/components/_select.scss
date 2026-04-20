@@ -21,6 +21,11 @@
         @apply absolute z-20 mt-1 max-h-72 overflow-auto rounded-md bg-white py-1 text-base ring-0 focus:outline-none sm:text-sm;
         min-width: 100%;
         width: max-content;
+
+        // Mobile : éviter que le dropdown déborde de l'écran si les options sont longues
+        @include mobile {
+            max-width: calc(100vw - 32px);
+        }
     
         .active-option{
             background: rgb(149,253,252);

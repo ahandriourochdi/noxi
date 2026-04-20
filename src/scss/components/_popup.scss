@@ -85,6 +85,13 @@
                 border: 1px solid rgba(255, 255, 255, 0.08);
                 box-shadow: 0 16px 48px rgba(0, 0, 0, 0.4);
 
+                // Mobile : occuper quasi tout l'écran pour confort de saisie
+                @include mobile {
+                    width: 100%;
+                    max-width: 100%;
+                    margin: 0;
+                }
+
                 .contact-close{
                     @apply absolute top-4 right-5 text-2xl leading-none;
                     color: rgba(255, 255, 255, 0.4);
@@ -94,6 +101,12 @@
 
                 .contact-header{
                     @apply px-8 pt-8 pb-2;
+
+                    @include mobile {
+                        padding-left: 20px;
+                        padding-right: 20px;
+                        padding-top: 24px;
+                    }
 
                     h2{
                         @apply text-xl font-semibold mb-2;
@@ -111,8 +124,19 @@
                 .contact-form{
                     @apply px-8 py-6 flex flex-col gap-5;
 
+                    @include mobile {
+                        padding: 16px 20px 20px;
+                        gap: 16px;
+                    }
+
                     .contact-form-row{
                         @apply grid grid-cols-2 gap-4;
+
+                        // Mobile : empiler les champs prénom/nom
+                        @include mobile {
+                            grid-template-columns: 1fr;
+                            gap: 12px;
+                        }
                     }
 
                     .contact-field{

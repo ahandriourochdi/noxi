@@ -15,8 +15,9 @@
   grid-template-columns: 280px 1fr;
   gap: 24px;
 
-  @media (max-width: 900px) {
+  @include tablet {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 }
 
@@ -30,6 +31,13 @@
   height: fit-content;
   position: sticky;
   top: 80px;
+
+  // Tablette/mobile : pas de sticky (prend trop d'écran), padding réduit
+  @include tablet {
+    position: static;
+    top: auto;
+    padding: 16px;
+  }
 
   .undercover-players {
     margin-bottom: 18px;
@@ -165,6 +173,11 @@
   padding: 32px;
   min-height: 500px;
   position: relative;
+
+  @include mobile {
+    padding: 20px 16px;
+    min-height: 400px;
+  }
 }
 
 .undercover-error-toast {
@@ -285,6 +298,11 @@
   flex-direction: column;
   align-items: center;
   gap: 20px;
+
+  @include mobile {
+    max-width: 90vw;
+    gap: 16px;
+  }
 }
 
 .undercover-card {

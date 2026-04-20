@@ -1,0 +1,27 @@
+// Breakpoints Noxi (alignés sur Tailwind)
+// Desktop-first approach : on écrit le style desktop par défaut, puis
+// on ajoute des overrides pour les tailles plus petites via ces mixins.
+
+$bp-sm: 640px;   // grand mobile / petite tablette
+$bp-md: 768px;   // tablette portrait
+$bp-lg: 1024px;  // tablette paysage / petit laptop
+$bp-xl: 1280px;  // desktop standard
+
+// Usage : @include mobile { ... }
+@mixin mobile          { @media (max-width: #{$bp-sm - 1px})  { @content; } }  // < 640px
+@mixin mobile-large    { @media (max-width: #{$bp-md - 1px})  { @content; } }  // < 768px
+@mixin tablet          { @media (max-width: #{$bp-lg - 1px})  { @content; } }  // < 1024px
+@mixin small-desktop   { @media (max-width: #{$bp-xl - 1px})  { @content; } }  // < 1280px
+
+// Au-delà (utile ponctuellement pour l'approche mobile-first)
+@mixin from-sm  { @media (min-width: #{$bp-sm}) { @content; } }
+@mixin from-md  { @media (min-width: #{$bp-md}) { @content; } }
+@mixin from-lg  { @media (min-width: #{$bp-lg}) { @content; } }
+@mixin from-xl  { @media (min-width: #{$bp-xl}) { @content; } }
+
+// Contexte orientation (pour jeux)
+@mixin landscape-mobile { @media (max-width: #{$bp-lg - 1px}) and (orientation: landscape) { @content; } }
+@mixin portrait         { @media (orientation: portrait) { @content; } }
+
+// Touch devices (pas de hover)
+@mixin touch            { @media (hover: none) and (pointer: coarse) { @content; } }

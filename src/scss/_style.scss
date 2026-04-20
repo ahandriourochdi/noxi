@@ -31,14 +31,29 @@ h1, h2, h3{
 
 h1{
   @apply font-bold text-5xl;
+
+  // Mobile : titres géants trop dominants, on réduit
+  @include mobile {
+    font-size: 2.25rem;
+    line-height: 1.15;
+  }
 }
 
 h2{
   @apply font-semibold text-4xl;
+
+  @include mobile {
+    font-size: 1.875rem;
+    line-height: 1.2;
+  }
 }
 
 h3{
   @apply font-medium text-xl;
+
+  @include mobile {
+    font-size: 1.125rem;
+  }
 }
 
 p{

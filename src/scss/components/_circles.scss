@@ -7,6 +7,14 @@
     border-radius: 50%;
     margin: 116.9px 31.5px 11.2px 0;
     opacity: .07;
+
+    // Mobile : cercle réduit + position ajustée pour ne pas déborder (les blobs de fond décoratifs sont purement cosmétiques)
+    @include mobile {
+        width: 400px;
+        height: 400px;
+        left: -150px;
+        top: 40vh;
+    }
     -webkit-filter: blur(50px);
     filter: blur(50px);
     -webkit-transition: -webkit-transform ease-in-out .3s;
@@ -32,6 +40,12 @@
     border-radius: 50%;
     margin: 116.9px 31.5px 11.2px 0;
     opacity: .07;
+
+    @include mobile {
+        width: 300px;
+        height: 300px;
+        right: -120px;
+    }
     -webkit-transition: -webkit-transform ease-in-out .3s;
     transition: -webkit-transform ease-in-out .3s;
     -o-transition: transform ease-in-out .3s;

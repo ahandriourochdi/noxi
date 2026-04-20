@@ -12,7 +12,14 @@
     .leaderboard{
         .player-finder{
             @apply flex flex-row justify-between items-center mb-4;
-    
+
+            // Mobile : empiler filtres + recherche
+            @include mobile {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
             .game-filter{
                 @apply flex flex-wrap gap-2;
 
@@ -26,18 +33,23 @@
                     @apply text-darker;
                 }
             }
-    
+
             .player-search{
                 @apply flex flex-row h-full items-center;
-    
+
                 input{
                     @apply bg-white bg-opacity-[0.07] py-1 px-4 text-white rounded-full outline-0;
-                }   
-    
+
+                    @include mobile {
+                        flex: 1;
+                        padding: 8px 14px;
+                    }
+                }
+
                 svg{
                     @apply h-4/6 w-auto ml-4;
                 }
-                
+
             }
         }
 

@@ -59,6 +59,13 @@
     flex-direction: column;
     gap: 10px;
     pointer-events: none;
+
+    // Mobile : le toast occupe la largeur utile avec marge latérale
+    @include mobile {
+        top: 12px;
+        right: 12px;
+        left: 12px;
+    }
 }
 
 .toast{
@@ -67,6 +74,12 @@
     cursor: pointer;
     min-width: 280px;
     max-width: 420px;
+
+    @include mobile {
+        min-width: 0;
+        max-width: none;
+        width: 100%;
+    }
     backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);

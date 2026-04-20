@@ -25,22 +25,56 @@
 
     .profile-board{
         @apply bg-white bg-opacity-[0.07] px-12 py-14 rounded-3xl;
-    
+
+        @include tablet {
+            padding: 32px 24px;
+        }
+        @include mobile {
+            padding: 20px 16px;
+            border-radius: 20px;
+        }
+
         .profile-banner{
             @apply flex flex-row items-center mb-20;
+
+            // Mobile : empiler avatar / infos / actions
+            @include tablet {
+                flex-direction: column;
+                text-align: center;
+                gap: 20px;
+                margin-bottom: 40px;
+            }
 
             img{
                 @apply w-40 h-40 rounded-full mr-8 ;
                 background: rgb(149,253,252);
                 background: linear-gradient(45deg, rgba(149,253,252,1) 0%, rgba(254,190,253,1) 100%);
+
+                @include tablet {
+                    margin-right: 0;
+                }
+                @include mobile {
+                    width: 120px;
+                    height: 120px;
+                }
             }
 
             .profile-resume{
                 @apply flex flex-col justify-between h-36;
 
+                @include tablet {
+                    height: auto;
+                    gap: 16px;
+                    align-items: center;
+                }
+
                 .profile-name{
                     h3{
                         @apply font-medium font-sans text-4xl mb-1;
+
+                        @include mobile {
+                            font-size: 1.75rem;
+                        }
                     }
 
                     span{
@@ -282,8 +316,18 @@
         .info-container{
             @apply flex flex-row;
 
+            // Tablette/mobile : empiler les 2 colonnes (left-info / right-info)
+            @include tablet {
+                flex-direction: column;
+                gap: 32px;
+            }
+
             h4{
                 @apply font-medium font-title text-white text-2xl mb-4;
+
+                @include mobile {
+                    font-size: 1.25rem;
+                }
             }
 
             p{
@@ -292,6 +336,11 @@
 
             .left-info{
                 @apply w-2/4 pr-6;
+
+                @include tablet {
+                    width: 100%;
+                    padding-right: 0;
+                }
 
                 .biography{
                     @apply mb-14;
@@ -403,6 +452,12 @@
                 .stats-grid {
                     @apply grid grid-cols-4 gap-4 mt-2;
 
+                    // Mobile : 2 colonnes pour les stats
+                    @include mobile {
+                        grid-template-columns: 1fr 1fr;
+                        gap: 12px;
+                    }
+
                     .stat-item {
                         @apply flex flex-col items-center py-4 rounded-2xl;
                         background: rgba(255, 255, 255, 0.04);
@@ -438,6 +493,11 @@
 
             .right-info{
                 @apply w-2/4 pl-16;
+
+                @include tablet {
+                    width: 100%;
+                    padding-left: 0;
+                }
 
                 .best-game{
                     @apply mb-14;

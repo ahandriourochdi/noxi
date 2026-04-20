@@ -4,22 +4,58 @@ footer{
     .footer-container{
         @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center;
 
+        // Mobile : passer en colonne, logo au-dessus, menus en 2x2
+        @include tablet {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 32px;
+        }
+
         .footer-brand{
             @apply sm:mr-16 lg:mr-40 sm:h-full flex items-center;
             img{
                 @apply h-auto min-w-full;
+            }
+
+            @include tablet {
+                margin-right: 0;
+                align-self: center;
+
+                img {
+                    max-width: 120px;
+                    min-width: 0;
+                }
             }
         }
 
         .footer-menu{
             @apply flex w-full justify-between sm:h-full items-center;
 
+            // Tablette : grid 2 colonnes
+            @include tablet {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 32px 24px;
+                align-items: flex-start;
+            }
+
+            // Mobile : grid 2 colonnes serrées
+            @include mobile {
+                grid-template-columns: 1fr 1fr;
+                gap: 24px 16px;
+            }
+
             h4{
                 @apply font-semibold text-white text-lg mb-6;
                 &::after{
                     content: '';
-                    // border-bottom: 3px solid #000;
                     @apply h-[3px] bg-gradient-to-r from-main to-secondary mb-8 rounded-full block mt-2;
+                }
+
+                @include mobile {
+                    font-size: 1rem;
+                    margin-bottom: 12px;
+                    &::after { margin-bottom: 12px; }
                 }
             }
 
@@ -33,34 +69,28 @@ footer{
                 }
             }
 
-            .navigation-column{
-                h4::after{
-                    @apply w-[105px];
-                }
-            }
+            .navigation-column h4::after { @apply w-[105px]; }
+            .community-column  h4::after { @apply w-[132px]; }
+            .legal-column      h4::after { @apply w-[50px]; }
+            .social-column     h4::after { @apply w-[115px]; }
 
-            .community-column{
-                h4::after{
-                    @apply w-[132px];
-                }
+            // En mobile, réduire la largeur des barres pour qu'elles ne dépassent pas
+            @include mobile {
+                .navigation-column h4::after { width: 70px; }
+                .community-column  h4::after { width: 90px; }
+                .legal-column      h4::after { width: 40px; }
+                .social-column     h4::after { width: 80px; }
             }
-
-            .legal-column{
-                h4::after{
-                    @apply w-[50px];
-                }
-            }
-
-            .social-column{
-                h4::after{
-                    @apply w-[115px];
-                }
-            }
-            
         }
     }
 
     .copyright{
         @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex justify-center items-center sm:mt-8 text-xs;
+        text-align: center;
+
+        @include mobile {
+            margin-top: 24px;
+            font-size: 0.7rem;
+        }
     }
 }

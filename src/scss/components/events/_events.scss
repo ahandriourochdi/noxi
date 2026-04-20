@@ -22,6 +22,18 @@
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
         transition: all 0.3s;
 
+        // Mobile/tablette : empiler image + contenu
+        @include tablet {
+            flex-direction: column;
+            align-items: center;
+            padding: 24px;
+            text-align: center;
+            gap: 16px;
+        }
+        @include mobile {
+            padding: 20px 16px;
+        }
+
         &:hover {
             border-color: rgba(149, 253, 252, 0.15);
             box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
@@ -29,6 +41,12 @@
 
         img{
             @apply w-48 h-48 rounded-full mr-12 object-cover;
+
+            @include tablet {
+                margin-right: 0;
+                width: 140px;
+                height: 140px;
+            }
         }
 
         .spotlight-text{

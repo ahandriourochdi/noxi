@@ -15,7 +15,8 @@
     "audit": "npm audit",
     "audit:fix": "npm audit fix",
     "test:all": "node scripts/test-all.js",
-    "undercover:validate": "node server/games/undercover/__tests__/validate.js"
+    "undercover:validate": "node server/games/undercover/__tests__/validate.js",
+    "undercover:fetch-images": "node server/games/undercover/__tests__/fetch-images.js"
   },
   "dependencies": {
     "@emotion/react": "^11.11.0",

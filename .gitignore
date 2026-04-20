@@ -26,3 +26,6 @@ noctis.code-workspace
 
 # Claude Code / AI assistant
 .claude/
+
+# Docs sensibles (infos serveur / déploiement)
+docs/setup/server.md
